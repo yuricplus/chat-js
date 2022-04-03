@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        ul {
+            width: 100%;
+            list-style: none;
+        }
+
+        li {
+            width: 300px;
+            padding: 15px;
+            font-weight: 600;
+            background-color:rgb(245 255 245);
+            box-shadow: 1px 1px 3px #6b6868;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        li span {
+            font-size: 12px;
+            color: #555555;
+        }
+
+        li h3 {
+            margin: 0;
+            font-family: fantasy;
+        }
+
+        li div {
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        li p {
+            margin: 0;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        body {
+            position: relative;
+            background-color: rgb(232, 250, 255);
+            font-family: Arial, Helvetica, sans-serif
+        }
+        .form-group {
+            position: fixed;
+            bottom: 30px;
+            width: 100%;
+        }
+
+        .form-group input {
+            width: 87%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 2px solid #eaeaea;
+
+        }
+
+        .form-group button {
+            width: 8%;
+            padding: 10px;
+            border: 2px solid #eaeaea;
+            background-color: #eaeaea;
+        }
+
+        .modal {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0%;
+        }
+
+        .modal-cover {
+            background-color: #808080c2;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .modal-content {
+            position: absolute;
+            background-color: #eaeaea;
+            width: 300px;
+            height: 150px;
+            top: 100px;
+            left: 30%;
+            display: flex;  
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .modal-content input {
+            padding: 10px;
+            border-radius: 4px;
+            border: 2px solid gray;
+            margin-top: 10px;
+        }
+
+        .modal-content button {
+            padding: 10px;
+            border-radius: 4px;
+            border: 2px solid gray;
+        }
+    </style>
+</head>
+<body>
+    <ul id="message"></ul>
+    <form class="form-group" id="form" action="">
+        <input type="text" placeholder="send" id="input"  autocomplete="off">
+        <button>Send</button>
+    </form>
+    <div class="modal">
+        <div class="modal-cover"></div>
+        <div class="modal-content">
+            <span>Whats your name?</span>
+            <form action="" id="form-name">
+                <input type="text" id="name-selector">
+                <button>Save</button>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+    const socket = io();
+    const message = document.getElementById('message')
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const selectorName = document.querySelector('#name-selector');
+    const modal = document.querySelector('.modal');
+    const formName = document.getElementById('form-name');
+    const nameUser = localStorage.getItem('name')
+
+    if(nameUser) {
+        modal.style.display = 'none'
+    }
+
+    formName.addEventListener('submit', (e) => {
+        e.preventDefault();
+        localStorage.setItem('name', selectorName.value);
+        modal.style.display = 'none'
+    })
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (input.value) {
+        const msgContent = {
+            msg: input.value,
+            name: localStorage.getItem('name'),
+            hours: `${new Date().getHours()}:${new Date().getMinutes()}`
+        }
+        socket.emit('chat message', msgContent);
+        input.value = '';
+        }
+    });
+
+    socket.on('chat message', (msgContent) => {
+        const item = document.createElement('li');
+        const user = document.createElement('p');
+        const date = document.createElement('span');
+        const div = document.createElement('div');
+        const text = document.createElement('h3');
+
+        text.textContent = msgContent.msg;
+
+        date.textContent = msgContent.hours;
+        user.textContent = msgContent.name;
+
+        div.appendChild(text);
+        div.appendChild(user);
+        
+        item.appendChild(div);
+        item.appendChild(date)
+
+        message.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight)
+    })
+</script>
+</html>
